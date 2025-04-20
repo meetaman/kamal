@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Reports</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sales Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line text-primary me-2"></i>Sales Report
+                    </h5>
+                    <p class="card-text">Generate detailed sales reports with filters for date range, party, and product.</p>
+                    <a href="/reports/sales" class="btn btn-primary">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-shopping-cart text-success me-2"></i>Purchase Report
+                    </h5>
+                    <p class="card-text">View purchase details with filters for date range, party, and product.</p>
+                    <a href="/reports/purchases" class="btn btn-success">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Party-wise Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users text-info me-2"></i>Party-wise Report
+                    </h5>
+                    <p class="card-text">Generate reports showing transactions with specific parties.</p>
+                    <a href="/reports/party_wise" class="btn btn-info">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product-wise Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-box text-warning me-2"></i>Product-wise Report
+                    </h5>
+                    <p class="card-text">View sales and purchase details for specific products.</p>
+                    <a href="/reports/product_wise" class="btn btn-warning">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- GST Report Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-file-invoice-dollar text-danger me-2"></i>GST Report
+                    </h5>
+                    <p class="card-text">Generate GST reports with SGST and CGST details.</p>
+                    <a href="/reports/gst" class="btn btn-danger">
+                        <i class="fas fa-file-alt me-2"></i>Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

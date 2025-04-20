@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Add Account{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">Add New Account</h2>
+                    <p class="text-muted mb-0">Create a new account</p>
+                </div>
+                <a href="/accounts" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_account') }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Account Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Account Type</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Select Type</option>
+                                <option value="Bank">Bank</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Process">Process</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="tdsContainer" style="display: none;">
+                            <label for="tds_percentage" class="form-label">TDS Percentage</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="tds_percentage" name="tds_percentage" step="0.01" min="0" max="100">
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Add Account
+                            </button>
+                            <a href="/accounts" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded'); // Debug log
+    
+    const typeSelect = document.getElementById('type');
+    const tdsContainer = document.getElementById('tdsContainer');
+    const tdsInput = document.getElementById('tds_percentage');
+    
+    console.log('Elements found:', {typeSelect, tdsContainer, tdsInput}); // Debug log
+    
+    if (typeSelect && tdsContainer && tdsInput) {
+        // Add change event listener
+        typeSelect.addEventListener('change', function() {
+            console.log('Type changed to:', this.value); // Debug log
+            
+            if (this.value === 'Process') {
+                console.log('Showing TDS field'); // Debug log
+                tdsContainer.style.display = 'block';
+                tdsInput.required = true;
+            } else {
+                console.log('Hiding TDS field'); // Debug log
+                tdsContainer.style.display = 'none';
+                tdsInput.required = false;
+                tdsInput.value = '';
+            }
+        });
+        
+        // Trigger change event on page load if Process is selected
+        if (typeSelect.value === 'Process') {
+            typeSelect.dispatchEvent(new Event('change'));
+        }
+    } else {
+        console.error('Required elements not found'); // Debug log
+    }
+});
+</script>
+{% endblock %} 

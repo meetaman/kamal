@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Party Ledger{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">Party Ledger</h2>
+                    <p class="text-muted mb-0">View and manage party transactions</p>
+                </div>
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total Parties</h6>
+                            <h2 class="mb-0">{{ parties|length }}</h2>
+                        </div>
+                        <i class="fas fa-users fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Active Parties</h6>
+                            <h2 class="mb-0">{{ parties|selectattr('total_bills', '>', 0)|list|length }}</h2>
+                        </div>
+                        <i class="fas fa-user-check fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total Bills</h6>
+                            <h2 class="mb-0">{{ parties|sum(attribute='total_bills') }}</h2>
+                        </div>
+                        <i class="fas fa-file-invoice fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total Amount</h6>
+                            <h2 class="mb-0">₹{{ "%.2f"|format(parties|sum(attribute='total_amount') or 0) }}</h2>
+                        </div>
+                        <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parties Table Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">All Parties</h5>
+            <div class="input-group" style="width: 300px;">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" id="searchInput" placeholder="Search parties...">
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="partiesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Party Name</th>
+                            <th class="text-end">Total Bills</th>
+                            <th class="text-end">Total Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for party in parties %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building me-2 text-primary"></i>
+                                    {{ party.party }}
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-info">{{ party.total_bills }}</span>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-warning">₹{{ "%.2f"|format(party.total_amount or 0) }}</span>
+                            </td>
+                            <td>
+                                {% if party.total_bills > 0 %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/party_ledger/{{ party.p_id }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-book"></i> View Ledger
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('partiesTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const searchText = this.value.toLowerCase();
+        
+        for (let row of rows) {
+            const partyName = row.cells[0].textContent.toLowerCase();
+            if (partyName.includes(searchText)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+</script>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        background-color: #f8f9fa;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table th {
+        font-weight: 600;
+        border-top: none;
+    }
+    
+    .table td, .table th {
+        vertical-align: middle;
+    }
+    
+    .text-end {
+        text-align: right;
+    }
+    
+    .table-light {
+        background-color: #f8f9fa;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %} 

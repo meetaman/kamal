@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Outgoing Bill{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit Outgoing Bill</h2>
+        <a href="{{ url_for('outgoing_bills') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Bills
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('edit_outgoing_bill', s_no=bill.s_no) }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="bill_no" class="form-label">Bill No.</label>
+                        <input type="text" class="form-control" id="bill_no" name="bill_no" value="{{ bill.bill_no }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="bill_date" class="form-label">Bill Date</label>
+                        <input type="date" class="form-control" id="bill_date" name="bill_date" value="{{ bill.bill_date }}" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="party_id" class="form-label">Party</label>
+                        <select class="form-select" id="party_id" name="party_id" required>
+                            <option value="">Select Party</option>
+                            {% for party in parties %}
+                            <option value="{{ party.p_id }}" {% if party.p_id == bill.party_id %}selected{% endif %}>
+                                {{ party.party }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="account_id" class="form-label">Account</label>
+                        <select class="form-select" id="account_id" name="account_id">
+                            <option value="">Select Account</option>
+                            {% for account in accounts %}
+                            <option value="{{ account.a_id }}" data-type="{{ account.type }}" 
+                                    {% if account.a_id == bill.account_id %}selected{% endif %}>
+                                {{ account.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3" id="tds_container" style="display: none;">
+                    <div class="col-md-6">
+                        <label for="tds_percentage" class="form-label">TDS Percentage</label>
+                        <input type="number" class="form-control" id="tds_percentage" name="tds_percentage" 
+                               step="0.01" min="0" max="100" value="{{ bill.tds_percent or '' }}">
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered" id="itemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Rate</th>
+                                <th>GST %</th>
+                                <th>Sub Total</th>
+                                <th>SGST</th>
+                                <th>CGST</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>
+                                    <select class="form-select product-select" name="product_id[]" required>
+                                        <option value="">Select Product</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.prod_id }}" 
+                                                {% if product.prod_id == item.product_id %}selected{% endif %}>
+                                            {{ product.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control qty" name="qty[]" 
+                                           step="0.01" min="0" value="{{ item.qty }}" required>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control rate" name="rate[]" 
+                                           step="0.01" min="0" value="{{ item.rate }}" required>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control gst" name="gst_percent[]" 
+                                           step="0.01" min="0" value="{{ item.gst_percent }}" required>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control sub-total" readonly 
+                                           value="{{ item.sub_total }}">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control sgst" readonly 
+                                           value="{{ item.sgst_amount }}">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control cgst" readonly 
+                                           value="{{ item.cgst_amount }}">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control total" readonly 
+                                           value="{{ item.total_amount }}">
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-row">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="8" class="text-end">
+                                    <strong>Final Amount:</strong>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" id="final_amount" 
+                                           name="final_amount" readonly value="{{ bill.final_amount }}">
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-success" id="addRow">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Bill
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide TDS container based on account type
+    const accountSelect = document.getElementById('account_id');
+    const tdsContainer = document.getElementById('tds_container');
+    
+    function updateTdsVisibility() {
+        const selectedOption = accountSelect.options[accountSelect.selectedIndex];
+        const accountType = selectedOption.getAttribute('data-type');
+        if (accountType === 'Process') {
+            tdsContainer.style.display = 'block';
+            document.getElementById('tds_percentage').required = true;
+        } else {
+            tdsContainer.style.display = 'none';
+            document.getElementById('tds_percentage').required = false;
+            document.getElementById('tds_percentage').value = '';
+        }
+    }
+    
+    accountSelect.addEventListener('change', updateTdsVisibility);
+    updateTdsVisibility(); // Initial check
+
+    // Add new row
+    document.getElementById('addRow').addEventListener('click', function() {
+        const tbody = document.querySelector('#itemsTable tbody');
+        const newRow = tbody.insertRow();
+        
+        newRow.innerHTML = `
+            <td>
+                <select class="form-select product-select" name="product_id[]" required>
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                    <option value="{{ product.prod_id }}">{{ product.name }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control qty" name="qty[]" step="0.01" min="0" required>
+            </td>
+            <td>
+                <input type="number" class="form-control rate" name="rate[]" step="0.01" min="0" required>
+            </td>
+            <td>
+                <input type="number" class="form-control gst" name="gst_percent[]" step="0.01" min="0" required>
+            </td>
+            <td>
+                <input type="number" class="form-control sub-total" readonly>
+            </td>
+            <td>
+                <input type="number" class="form-control sgst" readonly>
+            </td>
+            <td>
+                <input type="number" class="form-control cgst" readonly>
+            </td>
+            <td>
+                <input type="number" class="form-control total" readonly>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm remove-row">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        // Add event listeners to new row
+        addRowEventListeners(newRow);
+    });
+
+    // Remove row
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-row')) {
+            e.target.closest('tr').remove();
+            calculateFinalAmount();
+        }
+    });
+
+    // Add event listeners to existing rows
+    function addRowEventListeners(row) {
+        const inputs = row.querySelectorAll('.qty, .rate, .gst');
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateRow);
+        });
+    }
+
+    // Calculate row totals
+    function calculateRow() {
+        const row = this.closest('tr');
+        const qty = parseFloat(row.querySelector('.qty').value) || 0;
+        const rate = parseFloat(row.querySelector('.rate').value) || 0;
+        const gst = parseFloat(row.querySelector('.gst').value) || 0;
+        
+        const subTotal = qty * rate;
+        const gstAmount = (subTotal * gst) / 100;
+        const sgst = cgst = gstAmount / 2;
+        const total = subTotal + gstAmount;
+        
+        row.querySelector('.sub-total').value = subTotal.toFixed(2);
+        row.querySelector('.sgst').value = sgst.toFixed(2);
+        row.querySelector('.cgst').value = cgst.toFixed(2);
+        row.querySelector('.total').value = total.toFixed(2);
+        
+        calculateFinalAmount();
+    }
+
+    // Calculate final amount
+    function calculateFinalAmount() {
+        const totals = Array.from(document.querySelectorAll('.total')).map(input => 
+            parseFloat(input.value) || 0
+        );
+        const finalAmount = totals.reduce((sum, val) => sum + val, 0);
+        document.getElementById('final_amount').value = finalAmount.toFixed(2);
+    }
+
+    // Add event listeners to existing rows
+    document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+        addRowEventListeners(row);
+    });
+});
+</script>
+{% endblock %} 

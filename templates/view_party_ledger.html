@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Party Ledger - {{ party.party }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Party Ledger - {{ party.party }}</h2>
+                <a href="{{ url_for('party_ledger') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Parties
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <!-- Incoming Summary -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Incoming Bills Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">Total Bills</p>
+                            <h4>{{ incoming_summary.total_incoming_bills }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">Total Amount</p>
+                            <h4>₹{{ "%.2f"|format(incoming_summary.total_incoming_amount) }}</h4>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">First Transaction</p>
+                            <p>{{ incoming_summary.first_incoming_transaction }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">Last Transaction</p>
+                            <p>{{ incoming_summary.last_incoming_transaction }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outgoing Summary -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Outgoing Bills Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">Total Bills</p>
+                            <h4>{{ outgoing_summary.total_outgoing_bills }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">Total Amount</p>
+                            <h4>₹{{ "%.2f"|format(outgoing_summary.total_outgoing_amount) }}</h4>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">First Transaction</p>
+                            <p>{{ outgoing_summary.first_outgoing_transaction }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1 text-muted">Last Transaction</p>
+                            <p>{{ outgoing_summary.last_outgoing_transaction }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Balance -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Net Balance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <h3 class="mb-0 {% if net_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            ₹{{ "%.2f"|format(net_balance) }}
+                        </h3>
+                        <p class="text-muted mb-0">
+                            {% if net_balance >= 0 %}
+                                Party owes you
+                            {% else %}
+                                You owe party
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">All Transactions</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Bill No.</th>
+                            <th>Type</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Running Balance</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.bill_date }}</td>
+                            <td>{{ transaction.bill_no }}</td>
+                            <td>
+                                <span class="badge {% if transaction.bill_type == 'Incoming' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ transaction.bill_type }}
+                                </span>
+                            </td>
+                            <td class="text-end {% if transaction.bill_type == 'Incoming' %}text-success{% else %}text-danger{% endif %}">
+                                ₹{{ "%.2f"|format(transaction.final_amount|abs) }}
+                            </td>
+                            <td class="text-end {% if transaction.running_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ₹{{ "%.2f"|format(transaction.running_balance|abs) }}
+                            </td>
+                            <td class="text-center">
+                                <a href="{% if transaction.bill_type == 'Incoming' %}{{ url_for('view_bill', s_no=transaction.s_no) }}{% else %}{{ url_for('view_outgoing_bill', s_no=transaction.s_no) }}{% endif %}" 
+                                   class="btn btn-sm btn-info" 
+                                   title="View Bill">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

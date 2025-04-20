@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block title %}Add Incoming Bill{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">Add New Incoming Bill</h2>
+                <a href="/incoming_bills" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Bills
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_incoming_bill') }}" id="billForm">
+                <!-- Bill Header Section -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="inv_id" class="form-label">Invoice ID</label>
+                            <input type="text" class="form-control" id="inv_id" name="inv_id" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="bill_date" class="form-label">Bill Date</label>
+                            <input type="date" class="form-control" id="bill_date" name="bill_date" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="party_id" class="form-label">Party</label>
+                            <select class="form-select" id="party_id" name="party_id" required>
+                                <option value="">Select Party</option>
+                                {% for party in parties %}
+                                <option value="{{ party.p_id }}">{{ party.party }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="account_id" class="form-label">Account</label>
+                            <select class="form-select" id="account_id" name="account_id">
+                                <option value="">Select Account</option>
+                                {% for account in accounts %}
+                                <option value="{{ account.a_id }}" data-type="{{ account.type }}">{{ account.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TDS Section -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="form-group" id="tdsContainer" style="display: none;">
+                            <label for="tds_percentage" class="form-label">TDS Percentage</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="tds_percentage" name="tds_percentage" step="0.01" min="0" max="100">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <!-- Add hidden input for TDS amount -->
+                            <input type="hidden" id="tds_amount" name="tds_amount" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Items</h5>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="addItemRow()">
+                                <i class="fas fa-plus"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="itemsContainer"></div>
+                    </div>
+                </div>
+
+                <!-- Summary Section -->
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">Total Sub Total</label>
+                                    <input type="text" class="form-control" id="totalSubTotal" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">Total GST</label>
+                                    <input type="text" class="form-control" id="totalGst" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">Total SGST</label>
+                                    <input type="text" class="form-control" id="totalSgst" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label">Total CGST</label>
+                                    <input type="text" class="form-control" id="totalCgst" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Final Amount</label>
+                                    <input type="text" class="form-control" id="finalAmount" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/incoming_bills" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Bill</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        background-color: #f8f9fa;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    #tdsContainer {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+
+    #tdsContainer .input-group {
+        max-width: 200px;
+    }
+</style>
+
+<script>
+// Debug: Verify script is loading
+console.log('Script loaded');
+//////alert('Script loaded');
+
+// Debug: Check if DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    //////alert('DOM Content Loaded');
+    
+    // Debug: Check if account select exists
+    const accountSelect = document.getElementById('account_id');
+    console.log('Account select element:', accountSelect);
+    
+    if (accountSelect) {
+        // Debug: Verify event listener is attached
+        accountSelect.addEventListener('change', function() {
+            console.log('Account changed');
+            //////alert('Account changed');
+            
+            const selectedOption = this.options[this.selectedIndex];
+            const accountType = selectedOption.getAttribute('data-type');
+            console.log('Selected account type:', accountType);
+            
+            const tdsContainer = document.getElementById('tdsContainer');
+            const tdsInput = document.getElementById('tds_percentage');
+            
+            if (accountType === 'PROCESS') {
+                console.log('Showing TDS container');
+                tdsContainer.style.display = 'block';
+                tdsInput.required = true;
+            } else {
+                console.log('Hiding TDS container');
+                tdsContainer.style.display = 'none';
+                tdsInput.required = false;
+                tdsInput.value = '';
+            }
+        });
+    } else {
+        console.error('Account select element not found');
+        ////alert('Account select element not found');
+    }
+});
+
+let itemCount = 0;
+
+function addItemRow() {
+    const itemRow = document.createElement('div');
+    itemRow.className = 'item-row mb-3';
+    itemRow.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <select class="form-select" name="items[]" required>
+                        <option value="">Select Product</option>
+                        {% for product in products %}
+                        <option value="{{ product.prod_id }}">{{ product.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-control qty" name="item_${itemCount}[]" step="0.01" required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="form-label">Rate</label>
+                    <input type="number" class="form-control rate" name="item_${itemCount}[]" step="0.01" required>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label class="form-label">GST %</label>
+                    <input type="number" class="form-control gst" name="item_${itemCount}[]" step="0.01" required>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="form-group">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="button" class="btn btn-danger form-control" onclick="removeItemRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="form-label">Sub Total</label>
+                    <input type="text" class="form-control sub-total" readonly>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('itemsContainer').appendChild(itemRow);
+    
+    // Add event listeners for the new row
+    const inputs = itemRow.querySelectorAll('.qty, .rate, .gst');
+    inputs.forEach(input => {
+        input.addEventListener('input', calculateRow);
+    });
+    
+    itemCount++;
+}
+
+function removeItemRow(button) {
+    button.closest('.item-row').remove();
+    calculateTotals();
+}
+
+function calculateRow() {
+    const row = this.closest('.item-row');
+    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+    const rate = parseFloat(row.querySelector('.rate').value) || 0;
+    const gst = parseFloat(row.querySelector('.gst').value) || 0;
+    
+    const subTotal = qty * rate;
+    const gstAmount = (subTotal * gst) / 100;
+    const sgstAmount = cgstAmount = gstAmount / 2;
+    
+    // Update row calculations
+    row.querySelector('.sub-total').value = subTotal.toFixed(2);
+    
+    calculateTotals();
+}
+
+function calculateTotals() {
+    let totalSubTotal = 0;
+    let totalGst = 0;
+    let totalSgst = 0;
+    let totalCgst = 0;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const qty = parseFloat(row.querySelector('.qty').value) || 0;
+        const rate = parseFloat(row.querySelector('.rate').value) || 0;
+        const gst = parseFloat(row.querySelector('.gst').value) || 0;
+        
+        const subTotal = qty * rate;
+        const gstAmount = (subTotal * gst) / 100;
+        const sgstAmount = cgstAmount = gstAmount / 2;
+        
+        totalSubTotal += subTotal;
+        totalGst += gstAmount;
+        totalSgst += sgstAmount;
+        totalCgst += cgstAmount;
+    });
+    
+    // Calculate TDS amount if TDS percentage is provided
+    const tdsPercent = parseFloat(document.getElementById('tds_percentage').value) || 0;
+    const tdsAmount = (totalSubTotal * tdsPercent) / 100;
+    
+    // Update hidden TDS amount field
+    document.getElementById('tds_amount').value = tdsAmount.toFixed(2);
+    
+    const finalAmount = totalSubTotal + totalGst;
+    
+    // Update summary fields
+    document.getElementById('totalSubTotal').value = totalSubTotal.toFixed(2);
+    document.getElementById('totalGst').value = totalGst.toFixed(2);
+    document.getElementById('totalSgst').value = totalSgst.toFixed(2);
+    document.getElementById('totalCgst').value = totalCgst.toFixed(2);
+    document.getElementById('finalAmount').value = finalAmount.toFixed(2);
+    
+    // Display TDS amount if applicable
+    if (tdsPercent > 0) {
+        const tdsDisplay = document.getElementById('tdsAmountDisplay');
+        if (!tdsDisplay) {
+            const tdsRow = document.createElement('div');
+            tdsRow.className = 'row mt-3';
+            tdsRow.innerHTML = `
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="form-label">TDS Amount</label>
+                        <input type="text" class="form-control" id="tdsAmountDisplay" readonly>
+                    </div>
+                </div>
+            `;
+            document.querySelector('.card-body').appendChild(tdsRow);
+        }
+        document.getElementById('tdsAmountDisplay').value = tdsAmount.toFixed(2);
+    } else {
+        const tdsDisplay = document.getElementById('tdsAmountDisplay');
+        if (tdsDisplay) {
+            tdsDisplay.parentElement.parentElement.remove();
+        }
+        document.getElementById('tds_amount').value = '';  // Clear hidden TDS amount field
+    }
+}
+
+// Add event listener for TDS percentage changes
+document.getElementById('tds_percentage').addEventListener('input', calculateTotals);
+
+// Set today's date as default
+document.getElementById('bill_date').value = new Date().toISOString().split('T')[0];
+
+// Add first item
+addItemRow();
+
+// Add event listener for the form submission
+document.getElementById('billForm').addEventListener('submit', function(e) {
+    // Validate that at least one item is added
+    if (document.querySelectorAll('.item-row').length === 0) {
+        e.preventDefault();
+        ////alert('Please add at least one item to the bill');
+    }
+});
+</script>
+
+<!-- Add jQuery for better compatibility -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %} 

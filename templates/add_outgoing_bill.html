@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Add Outgoing Bill{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h2>Add New Outgoing Bill</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('add_outgoing_bill') }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="bill_no" class="form-label">Bill No.</label>
+                        <input type="text" class="form-control" id="bill_no" name="bill_no" readonly value="{{ next_bill_no|string }}">
+                        <small class="text-muted">Bill number is auto-generated</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="bill_date" class="form-label">Bill Date</label>
+                        <input type="date" class="form-control" id="bill_date" name="bill_date" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="party_id" class="form-label">Party</label>
+                        <select class="form-select" id="party_id" name="party_id" required>
+                            <option value="">Select Party</option>
+                            {% for party in parties %}
+                            <option value="{{ party.p_id }}">{{ party.party }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="account_id" class="form-label">Account</label>
+                        <select class="form-select" id="account_id" name="account_id" required>
+                            <option value="">Select Account</option>
+                            {% for account in accounts %}
+                            <option value="{{ account.a_id }}" data-type="{{ account.type }}">
+                                {{ account.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3" id="tds_container" style="display: none;">
+                    <div class="col-md-6">
+                        <label for="tds_percentage" class="form-label">TDS Percentage</label>
+                        <input type="number" class="form-control" id="tds_percentage" name="tds_percentage" step="0.01" min="0" max="100">
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-3">
+                    <table class="table" id="items_table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Rate</th>
+                                <th>GST %</th>
+                                <th>Sub Total</th>
+                                <th>SGST</th>
+                                <th>CGST</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <select class="form-select product-select" name="product_id[]" required>
+                                        <option value="">Select Product</option>
+                                        {% for product in products %}
+                                        <option value="{{ product.prod_id }}">{{ product.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control qty" name="qty[]" required min="1"></td>
+                                <td><input type="number" class="form-control rate" name="rate[]" required min="0" step="0.01"></td>
+                                <td><input type="number" class="form-control gst" name="gst_percent[]" required min="0" max="100" step="0.01"></td>
+                                <td><input type="number" class="form-control sub-total" readonly></td>
+                                <td><input type="number" class="form-control sgst" readonly></td>
+                                <td><input type="number" class="form-control cgst" readonly></td>
+                                <td><input type="number" class="form-control total" readonly></td>
+                                <td><button type="button" class="btn btn-danger remove-row"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-secondary" id="add_row">
+                        <i class="fas fa-plus"></i> Add Item
+                    </button>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Final Amount</label>
+                        <input type="number" class="form-control" id="final_amount" name="final_amount" readonly>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Save Bill</button>
+                    <a href="{{ url_for('outgoing_bills') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const accountSelect = document.getElementById('account_id');
+    const tdsContainer = document.getElementById('tds_container');
+    const tdsInput = document.getElementById('tds_percentage');
+
+    accountSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const accountType = selectedOption.dataset.type;
+        
+        if (accountType === 'Process') {
+            tdsContainer.style.display = 'block';
+            tdsInput.required = true;
+        } else {
+            tdsContainer.style.display = 'none';
+            tdsInput.required = false;
+            tdsInput.value = '';
+        }
+    });
+
+    function calculateRow(row) {
+        const qty = parseFloat(row.querySelector('.qty').value) || 0;
+        const rate = parseFloat(row.querySelector('.rate').value) || 0;
+        const gstPercent = parseFloat(row.querySelector('.gst').value) || 0;
+
+        const subTotal = qty * rate;
+        const sgst = (subTotal * gstPercent) / 200; // Half of GST
+        const cgst = sgst;
+        const total = subTotal + sgst + cgst;
+
+        row.querySelector('.sub-total').value = subTotal.toFixed(2);
+        row.querySelector('.sgst').value = sgst.toFixed(2);
+        row.querySelector('.cgst').value = cgst.toFixed(2);
+        row.querySelector('.total').value = total.toFixed(2);
+
+        calculateFinalAmount();
+    }
+
+    function calculateFinalAmount() {
+        let total = 0;
+        document.querySelectorAll('.total').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('final_amount').value = total.toFixed(2);
+    }
+
+    document.getElementById('items_table').addEventListener('input', function(e) {
+        if (e.target.classList.contains('qty') || 
+            e.target.classList.contains('rate') || 
+            e.target.classList.contains('gst')) {
+            calculateRow(e.target.closest('tr'));
+        }
+    });
+
+    document.getElementById('add_row').addEventListener('click', function() {
+        const tbody = document.querySelector('#items_table tbody');
+        const newRow = tbody.rows[0].cloneNode(true);
+        newRow.querySelectorAll('input').forEach(input => input.value = '');
+        newRow.querySelector('.product-select').value = '';
+        tbody.appendChild(newRow);
+    });
+
+    document.getElementById('items_table').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row')) {
+            if (document.querySelectorAll('#items_table tbody tr').length > 1) {
+                e.target.closest('tr').remove();
+                calculateFinalAmount();
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

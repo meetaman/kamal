@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Account{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Edit Account</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_account', a_id=account.a_id) }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Account Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ account.name }}" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Update Account</button>
+                        <a href="{{ url_for('accounts') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

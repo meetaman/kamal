@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Add Party{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Add New Party</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_party') }}">
+                    <div class="mb-3">
+                        <label for="party" class="form-label">Party Name</label>
+                        <input type="text" class="form-control" id="party" name="party" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gstin" class="form-label">GSTIN</label>
+                        <input type="text" class="form-control" id="gstin" name="gstin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Add Party</button>
+                        <a href="{{ url_for('party_master') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
