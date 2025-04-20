@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS accounts;
+
+CREATE TABLE accounts (
+    a_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+); 
